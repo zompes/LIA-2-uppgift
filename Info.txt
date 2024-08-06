@@ -1,0 +1,5 @@
+This is a project for a internship at AB Möllers Städ located in Malmö, Sweden.
+
+Task is to create "Reportschema", it must have at least 2 colums of which name of client and time of when a employee
+was at the client working. User must be able to edit any colum at any time and the time colum must only 
+accept digital times, e.g. 10:30 AM, time zone is Central European Time.
