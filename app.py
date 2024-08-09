@@ -1,100 +1,108 @@
 import tkinter as tk
 from tkinter import ttk
-from tkinter import messagebox
+import json
 
-def add_item():
+def save_data():
+    """Save the Treeview data to a file."""
+    items = []
+    for child in tree.get_children():
+        items.append(tree.item(child)["values"])
+    with open('data.json', 'w') as f:
+        json.dump(items, f)
+
+def load_data():
+    """Load data from the file into the Treeview."""
+    try:
+        with open('data.json', 'r') as f:
+            items = json.load(f)
+            for item in items:
+                tree.insert("", "end", values=item)
+    except FileNotFoundError:
+        pass  # If the file doesn't exist, do nothing
+
+def add_entry():
     name = name_entry.get()
     time = time_entry.get()
     if name and time:
-        tree.insert("", tk.END, values=(name, time))
+        tree.insert("", "end", values=(name, time))
         name_entry.delete(0, tk.END)
         time_entry.delete(0, tk.END)
-    else:
-        messagebox.showwarning("Input Error", "Please enter both name and time.")
 
-def remove_item():
+def remove_entry():
     selected_item = tree.selection()
     if selected_item:
-        for item in selected_item:
-            tree.delete(item)
-    else:
-        messagebox.showwarning("Selection Error", "Please select an item to remove.")
+        tree.delete(selected_item)
 
+# Create the main window
 root = tk.Tk()
-root.title("Reportschema")
+root.title("Name and Time Logger")
+root.geometry("500x400")
+root.configure(bg="#D6DBDF")  # Slightly darker background color
 
-# Configure root window
-root.geometry("600x400")  # Set a default window size
-root.resizable(True, True)  # Allow resizing
-
-# Define styles
+# Set a modern style for the application
 style = ttk.Style()
-style.configure("TLabel",
-                font=("Segoe UI", 12),
-                background="#f4f4f4",
-                foreground="#333")
-style.configure("TEntry",
-                padding=5,
-                relief="flat",
-                font=("Segoe UI", 12))
-style.configure("TButton",
-                padding=6,
-                relief="flat",
-                font=("Segoe UI", 12),
-                background="#007bff",
-                foreground="white")
-style.map("TButton",
-          background=[("active", "#0056b3")])
+style.theme_use("clam")
+style.configure("Treeview", 
+                background="#D6DBDF",
+                foreground="#2E4053",
+                rowheight=25,
+                fieldbackground="#D6DBDF",
+                font=('Helvetica', 12))
 
-# Treeview styles
-style.configure("Treeview",
-                font=("Segoe UI", 12),  # Font size for treeview items
-                background="#ffffff",
-                foreground="#000000",
-                rowheight=30)  # Increase row height for better readability
+style.configure("Treeview.Heading", 
+                background="#B2BABB", 
+                foreground="#2E4053",
+                font=('Helvetica', 14, 'bold'))
 
-style.configure("Treeview.Heading",
-                font=("Segoe UI", 14))  # Font size for column headings
+style.configure("TButton", 
+                background="#5DADE2", 
+                foreground="white",
+                font=('Helvetica', 12, 'bold'),
+                borderwidth=0,
+                padding=8)
 
-# Entry Widgets
-name_label = ttk.Label(root, text="Name")
-name_label.grid(row=0, column=0, sticky=tk.W, padx=10, pady=10)
-name_entry = ttk.Entry(root)
-name_entry.grid(row=1, column=0, sticky=tk.EW, padx=10, pady=5)
+style.map("TButton", 
+          background=[("active", "#3498DB")])
 
-time_label = ttk.Label(root, text="Time")
-time_label.grid(row=0, column=1, sticky=tk.W, padx=10, pady=10)
-time_entry = ttk.Entry(root)
-time_entry.grid(row=1, column=1, sticky=tk.EW, padx=10, pady=5)
+# Create the labels
+name_label = tk.Label(root, text="Name:", fg="#2E4053", bg="#D6DBDF", font=('Helvetica', 12, 'bold'))
+name_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
+time_label = tk.Label(root, text="Time:", fg="#2E4053", bg="#D6DBDF", font=('Helvetica', 12, 'bold'))
+time_label.grid(row=0, column=1, padx=5, pady=5, sticky="w")
 
-# Buttons
-add_button = ttk.Button(root, text="Add client", command=add_item)
-add_button.grid(row=2, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=10)
+# Create the entry fields
+name_entry = tk.Entry(root, font=('Helvetica', 12), bg="#B2BABB", fg="#2E4053", borderwidth=2, relief="flat")
+name_entry.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
+time_entry = tk.Entry(root, font=('Helvetica', 12), bg="#B2BABB", fg="#2E4053", borderwidth=2, relief="flat")
+time_entry.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
 
-remove_button = ttk.Button(root, text="Remove client", command=remove_item)
-remove_button.grid(row=3, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=10)
+# Create the add button
+add_button = ttk.Button(root, text="Add Entry", command=add_entry)
+add_button.grid(row=1, column=2, padx=5, pady=5, sticky="ew")
 
-# Treeview
-columns = ("Name", "Time")
-tree = ttk.Treeview(root, columns=columns, show="headings")
-
-# Set column headings
+# Create the Treeview widget
+tree = ttk.Treeview(root, columns=("Name", "Time"), show="headings")
 tree.heading("Name", text="Name")
 tree.heading("Time", text="Time")
+tree.column("Name", anchor="center")
+tree.column("Time", anchor="center")
+tree.grid(row=2, column=0, columnspan=3, padx=10, pady=10, sticky="nsew")
 
-# Configure column widths and alignment
-tree.column("Name", width=250, anchor=tk.CENTER)
-tree.column("Time", width=150, anchor=tk.CENTER)
+# Create the remove button
+remove_button = ttk.Button(root, text="Remove Entry", command=remove_entry)
+remove_button.grid(row=3, column=0, columnspan=3, pady=10)
 
-# Grid configuration for resizing
-tree.grid(row=4, column=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
-
-# Configure row and column weights to make the Treeview expand
-root.grid_rowconfigure(4, weight=1)
+# Adjust grid layout for responsiveness
+root.grid_rowconfigure(2, weight=1)
 root.grid_columnconfigure(0, weight=1)
 root.grid_columnconfigure(1, weight=1)
+root.grid_columnconfigure(2, weight=1)
 
-# Set a modern color for the root window
-root.configure(bg="#f4f4f4")
+# Load data when the app starts
+load_data()
 
+# Save data when the app closes
+root.protocol("WM_DELETE_WINDOW", lambda: (save_data(), root.destroy()))
+
+# Start the main event loop
 root.mainloop()
